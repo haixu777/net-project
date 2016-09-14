@@ -71,7 +71,7 @@ export default {
             });
           */
           this.closeModal();
-
+          this.content = '';
     },
 
 

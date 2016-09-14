@@ -5,7 +5,32 @@ function isArrEqual(arr1,arr2){
 	});
 }
 
+function isInArr(item,arr){
+	for(var i=0,len=arr.length; i<len; i++){
+		if(item===arr[i]){
+			return true;
+		}
+	}
+	return false;
+}
+
 function generateYjyyData(arr){
+	// 判断是否是组合词
+	if(/\s/.test(arr[0])){
+		var aTitle = [];
+		var aEvent = [];
+		for(var i=0,len=arr.length; i<len; i++){
+			var temp = arr[i].split(' ');
+			if(!isInArr(temp[0], aTitle)) aTitle.push(temp[0]);
+			if(!isInArr(temp[1], aEvent)) aEvent.push(temp[1]);
+		}
+		var sTitle = ["(",aTitle.map((word)=>{return ' \"'+word+'\" '}).join("||"),
+								")"].join("");
+		var sEvent = ["(",aEvent.map((word)=>{return ' \"'+word+'\" '}).join("||"),
+								")"].join("");
+		return sTitle+' && '+sEvent;
+	}
+
 		return ["(",arr.map((word)=>{return ' \"'+word+'\" '}).join("||"),
 								")"].join("")
 	}

@@ -78,6 +78,7 @@
 					</div>
 				</div>
 				<div class="panel_button_container button-group">
+                    <button class="btn btn-sm" @click="exportCombo">导出组合词</button>
 					<button class="btn btn-sm" @click="generateEditData(1,1)">九宫格</button>
 					<button class="btn btn-sm" @click="generateEditData(1,2)">计算所</button>
 					<button class="btn btn-sm " @click="generateEditData(1,3)">yjyy</button>
@@ -111,6 +112,7 @@
 					</div>
 				</div>
 				<div class="panel_button_container button-group">
+                    <button class="btn btn-sm" @click="exportFanCombo">导出繁体组合词</button>
 					<button class="btn btn-sm" @click="generateEditData(2,1)">九宫格</button>
 					<button class="btn btn-sm" @click="generateEditData(2,2)">计算所</button>
 					<button class="btn btn-sm " @click="generateEditData(2,3)">yjyy</button>
@@ -121,10 +123,29 @@
 	</div>
   </div>
   <import-box v-if='s' :topic="topic" v-bind:style="{ top:mouseY+'px',left:mouseX+'px' }"></import-box>
+  <exportbox v-if="export_jian" title="导出组合词"
+    :word-list= "comb_data"
+    :title-list="title_data.join(' ')"
+    :event-list="event_data.join(' ')"
+    :show.sync="showExportBox"
+    :package-list.sync = "packageList"
+    @export-to-sys = "exportToSys"></exportbox>
+
+  <exportbox v-else title="导出繁体组合词"
+    :word-list= "fan_comb_data"
+    :title-list="toFan(title_data).join(' ')"
+    :event-list="toFan(event_data).join(' ')"
+    :show.sync="showExportBox"
+    :package-list.sync = "packageList"
+    @export-to-sys = "exportToSys"></exportbox>
 </template>
 
 <script>
 import ImportBox from './ImportBox.vue'
+import ExportBox from '../ExportBox/ExportBox'
+import {server_path} from "../../../Constants/serverUrl.js";
+
+let sentWordRequest = {"get":null,"update":null,"delete":null,"patch":null};
 
 function isIn(array,element){
 
@@ -148,6 +169,10 @@ export default {
 		flag:0,
 		whichData:"",
 
+        showExportBox:false,
+        comboWordList:[],
+        packageList:[],
+        export_jian:false,
 
 		notEditing:{
 			jian:true,
@@ -162,6 +187,25 @@ export default {
 		temp_title_data:"",
 		temp_event_data:""
 
+    }
+  },
+  events:{
+    "export-to-file":function(data,type){
+      var content = '';
+      if(type==='jss'){
+        content = '称谓词\n' + data['title_content'] + '\n' + '事件词\n' + data['event_content'];
+      }else{
+        content = data['content'];
+      }
+      this.$http.post(server_path+"/transfer",{
+        action: 'save',
+        content: content
+      })
+        .then(response=>{
+
+        },(err)=>{
+
+        });
     }
   },
   computed:{
@@ -249,9 +293,57 @@ export default {
 
   },
   components: {
-    ImportBox
+    ImportBox,
+    "exportbox": ExportBox
   },
   methods:{
+    exportCombo:function(){
+        this.export_jian = true;
+        this.showExportBox = !this.showExportBox;
+        this.fetchPackageData();
+    },
+    exportFanCombo:function(){
+        this.export_jian = false;
+        this.showExportBox = !this.showExportBox;
+        this.fetchPackageData();
+    },
+    exportToSys(data){
+        console.log("--------topic",this.topic);
+        var postBody = Object.assign({},data,{
+        action:"push",
+        topic:this.topic
+    });
+    this.$http.post(server_path+"/transfer",postBody)
+     .then(response=>{
+          alert('推送到系统成功');
+          console.log("推送到系统成功");
+      },(err)=>{
+          alert('推送到系统失败');
+          console.log("推送到系统失败");
+      });
+
+    },
+    fetchPackageData(){
+        this.$http.get(server_path+"/theme",
+            {
+            params:{
+              topic : this.topic,
+              value : "package"
+            },
+            before(request){
+              if(sentWordRequest["get"]){
+                sentWordRequest["get"].abort();
+              }
+              sentWordRequest["get"] =request;
+            }
+        })
+        .then((response)=>{
+          console.log("packages",response.json().packages);
+            this.packageList = response.json().packages;
+        },(err)=>{
+            console.log("请求服务器失败");
+        });
+    },
   	//comb_data
 	makecomb:function(){
 		var tempData = [];

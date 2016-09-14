@@ -37,7 +37,17 @@
                       <label >计算所</label>
                     </div>
               </div>
-              <textarea class="textarea">{{transformedData}}</textarea>
+              <textarea class="textarea" v-if="combType!='jss'">{{transformedData}}</textarea>
+              <div class="jss_container" v-else>
+                <div class="title_container">
+                  称谓词
+                  <textarea>{{titleList}}</textarea>
+                </div>
+                <div class="event_container">
+                  事件词
+                  <textarea>{{eventList}}</textarea>
+                </div>
+              </div>
               <ul class="dropdown-group clearfix">
                   <li class="dropdown"  >
                       <div class="dropdown-left" tabindex="0">
@@ -65,7 +75,7 @@
                         </li>
                       </ul>
                     </div>
-                    <button v-show="isChoosingFile">导出</button>
+                    <button v-show="isChoosingFile" @click="exportToFile">导出</button>
                   </li>
 
 
@@ -93,11 +103,12 @@ export default {
 
   name:"ExportBox",
 
-  props:["title","show","packageList","wordList"],
+  props:["title","show","packageList","wordList","titleList","eventList"],
 
   data () {
 
     return {
+      topic: this.$parent.topic,
       combType:"",
       fileTypes:fileTypes,
       sysTypes:sysTypes,
@@ -163,8 +174,17 @@ export default {
 
     },
     addPackage(){
-      this.packageList.push(this.keyPackage);
-      console.log("添加成功",this.packageList);
+        this.$http.post(server_path+"/theme",{
+          package: this.keyPackage,
+          topic: this.topic
+        })
+          .then(response=>{
+            this.packageList.push(this.keyPackage);
+            // console.log("添加成功",this.packageList);
+            alert('添加成功');
+          },(err)=>{
+            alert('添加失败:'+err);
+          });
     },
     exportToSys(){
       var data = {
@@ -172,16 +192,24 @@ export default {
         package:this.chosenPackage[0],
         wordList:this.wordList
       };
-
+      if(!this.chosenPackage[0]){
+        console.log(!this.chosenPackage[0]);
+        alert('请选择一个关键词包');
+        return;
+      }
       this.chosenSysType = {};
       this.$dispatch("export-to-sys",data);
+      this.chosenPackage[0] = '';
     },
     exportToFile(){
       var data = {
-        content:this.transformedData
+          content:this.transformedData,
+          title_content:this.titleList,
+          event_content:this.eventList
       };
+      var type = this.combType;
       this.chosenFileType = "",
-      this.$dispatch("export-to-file",data);
+      this.$dispatch("export-to-file",data,type);
     }
 
 
@@ -192,4 +220,17 @@ export default {
 
 <style lang="scss" scoped>
 @import "./ExportBox.scss";
+
+.jss_container{
+  text-align: center;
+  > div{
+    float: left;
+    width: 50%;
+  }
+}
+textarea{
+  border: 1px solid #eee;
+  resize: none;
+  // word-wrap: normal;
+}
 </style>

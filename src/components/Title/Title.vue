@@ -88,9 +88,9 @@ import PopModal from "../PopModal/PopModal";
 
 let checkboxWords = ["high danger","forbidden words","check words","low danger","issued words"];
 let cardList = [
-  {title:"禁发",category:"forbidden words"},
-  {title:"审核",category:"check words"},
-  {title:"低危",category:"low danger"},
+  {title:"禁发词",category:"forbidden words"},
+  {title:"审核词",category:"check words"},
+  {title:"事件通配词",category:"low danger"},
 ];
 
 export default {

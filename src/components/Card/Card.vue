@@ -232,6 +232,7 @@ export default {
             word:word
           })
             .then(response=>{
+                this.wordList.push(word);
                 console.log("创建成功");
             },(err)=>{
                 console.log("创建失败");
