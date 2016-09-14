@@ -39,7 +39,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="event in eventList">
-                    	<td v-show="!isEditing"">{{$index+1}}</td>
+                    	<td v-show="!isEditing">{{$index+1}}</td>
                     	<td v-else>
                     		<input type="checkbox" :value="event.id" v-model="chosenEvents"/>
                     	</td>
@@ -76,6 +76,7 @@
     		@on-word-create="handleWordCreate"></dialog>
     <exportbox title="导出事件词"
       :word-list= "eventWordList"
+      :event-list="eventWordList"
       :show.sync="showExportBox"
       :package-list.sync = "packageList"
       @export-to-sys = "exportToSys"></exportbox>
@@ -119,7 +120,9 @@ export default {
       isEditing:false,
       chosenEvents:[],
       eventWordList:[],
-      packageList:[]
+      packageList:[],
+
+      totalSizeList:[]
     }
   },
   components:{
@@ -135,7 +138,7 @@ export default {
   			console.log("获取事件列表成功");
   			this.eventList = response.json().eventList;
   			this.totalSize = response.json().totalSize;
-        this.fetchPackageData();
+            this.fetchPackageData();
   		});
 
   },
@@ -359,18 +362,34 @@ export default {
       //   this.resetExportData();
         // this.fetchPackageData();
         console.log("this.chosenevents",this.chosenEvents);
-        this.$http.get(server_path+"/event/word",
-        {
-          params:{
-            ids: JSON.stringify(this.chosenEvents)
-          }
-        })
-          .then((response)=>{
-              this.eventWordList = response.json().wordList;
-          },(err)=>{
-              console.log("请求服务器失败");
-          });
-
+        // this.$http.get(server_path+"/event/word",
+        // {
+        //   params:{
+        //     ids: JSON.stringify(this.chosenEvents)
+        //
+        //   }
+        // })
+        //   .then((response)=>{
+        //       this.eventWordList = response.json().wordList;
+        //   },(err)=>{
+        //       console.log("请求服务器失败");
+        //   });
+        this.eventWordList = [];
+        for(var i=0; i<this.chosenEvents.length; i++){
+            this.$http.get(server_path+"/event/word",{
+                params:{
+                    id: this.chosenEvents[i],
+                    category: this.category,
+                    pageIndex: 1,
+                    pageSize: 10000000
+                }
+            })
+            .then((response)=>{
+                this.eventWordList = this.eventWordList.concat(response.json().wordList);
+            },(err)=>{
+                console.log('读取数据失败'+err);
+            });
+        }
     },
 
     exportToSys(data){
