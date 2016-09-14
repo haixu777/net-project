@@ -75,7 +75,7 @@
                         </li>
                       </ul>
                     </div>
-                    <button v-show="isChoosingFile" @click="exportToFile">导出</button>
+                    <a v-show="isChoosingFile" @click="exportToFile" :href="download_data" :download="download_filename">导出</a>
                   </li>
 
 
@@ -116,8 +116,10 @@ export default {
       chosenSysType:{},
       chosenPackage:"",
       transformedData:"",
-      keyPackage:""
+      keyPackage:"",
 
+      download_data:"",
+      download_filename:""
     }
   },
 
@@ -202,14 +204,22 @@ export default {
       this.chosenPackage[0] = '';
     },
     exportToFile(){
-      var data = {
+        var data = {
           content:this.transformedData,
           title_content:this.titleList,
           event_content:this.eventList
-      };
-      var type = this.combType;
-      this.chosenFileType = "",
-      this.$dispatch("export-to-file",data,type);
+        };
+        this.chosenFileType = "";
+
+        //this.$dispatch("export-to-file",data,type);
+        var content = '';
+        if(this.combType==='jss'){
+          content = encodeURIComponent("称谓词\r" + data['title_content'] + "\r" + "事件词\r" + data['event_content']);
+        }else{
+          content = encodeURIComponent(data['content']);
+        }
+        this.download_data = 'data:text/plain;UTF-8,'+ content;
+        this.download_filename = this.combType+'.txt';
     }
 
 

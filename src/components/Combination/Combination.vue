@@ -191,12 +191,16 @@ export default {
   },
   events:{
     "export-to-file":function(data,type){
-      var content = '';
-      if(type==='jss'){
-        content = '称谓词\n' + data['title_content'] + '\n' + '事件词\n' + data['event_content'];
-      }else{
-        content = data['content'];
-      }
+        // 导出txt前端实现，不需要后端交互
+
+        
+    //   var content = '';
+    //   if(type==='jss'){
+    //     content = '称谓词\n' + data['title_content'] + '\n' + '事件词\n' + data['event_content'];
+    //   }else{
+    //     content = data['content'];
+    //   }
+      /*
       this.$http.post(server_path+"/transfer",{
         action: 'save',
         content: content
@@ -206,6 +210,9 @@ export default {
         },(err)=>{
 
         });
+        */
+
+
     }
   },
   computed:{
