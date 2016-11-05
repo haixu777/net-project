@@ -71,7 +71,10 @@ export default {
       showModal:false,
       showCreateModal:false,
       totalSize:pageSize,
-      sentWordRequest:{"get":null,"update":null,"delete":null,"patch":null}
+      sentWordRequest:{"get":null,"update":null,"delete":null,"patch":null},
+
+      categoryList:[],
+      titleWordList:[]
     }
   },
 
@@ -79,6 +82,14 @@ export default {
 
       this.fetchServerData();
 
+    },
+
+    events:{
+        "getCategoryFromParent":function(msg){
+            this.categoryList = msg;
+            if(this.categoryList.indexOf(this.category)==-1)return;
+            this.handleExportWord({pageSize:99999999});
+        }
     },
 
 
@@ -203,6 +214,16 @@ export default {
 
         },paramsBody);
     },
+
+    handleExportWord(params){
+      this.fetchData((response)=>{
+          console.log("获取export所有word成功");
+          let data = response.json().wordList;
+          this.titleWordList = data;
+          this.$dispatch('getTitleWordList',this.titleWordList);
+      },params);
+    },
+
 
     handleWordPageClick(params){
       this.fetchData((response)=>{

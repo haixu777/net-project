@@ -4,7 +4,7 @@
 
       <div class="btn-group btn-group-justified file-btn-group">
         <a href="#" class="btn btn-default">批量导入</a>
-        <a href="#" class="btn btn-default">批量导出</a>
+        <a href="javascript:void(0);" class="btn btn-default" @click="exportClick">批量导出</a>
         <a href="#" class="btn btn-default">批量删除</a>
       </div>
 
@@ -79,13 +79,25 @@
 
 
   </div>
+  <exportbox title="导出称谓词"
+    :word-list= "titleWordList"
+    :title-list= "titleWordList.join(' ')"
+    :show.sync="showExportBox"
+    :package-list.sync = "packageList"
+    @export-to-sys = "exportToSys"></exportbox>
+
 </template>
 
 <script>
 
 import Card from "../Card/Card";
 import PopModal from "../PopModal/PopModal";
+import ExportBox from "../ExportBox/ExportBox";
 
+import {server_path} from "../../../Constants/serverUrl.js";
+
+
+let sentWordRequest = {"get":null,"update":null,"delete":null,"patch":null};
 let checkboxWords = ["high danger","forbidden words","check words","low danger","issued words"];
 let cardList = [
   {title:"禁发词",category:"forbidden words"},
@@ -97,6 +109,8 @@ export default {
 
   components:{
     "card":Card,
+    "exportbox":ExportBox
+
    // "modal":PopModal
   },
 
@@ -117,6 +131,11 @@ export default {
       childData:{},
 
       checkedWords:[], //多选框结果
+
+      showExportBox:false,
+      titleWordList:[],
+      packageList:[]
+
     }
   },
 
@@ -126,6 +145,12 @@ export default {
 
         this.childData = Object.assign({},this.childData,msg);
         console.log("----dispath ",this.childData);
+    },
+    "getTitleWordList":function(msg){
+        this.titleWordList = this.titleWordList.concat(msg);
+    },
+    "clearTitleCache":function(){
+        this.titleWordList = [];
     }
   },
 
@@ -138,7 +163,49 @@ export default {
     },
 
   methods:{
+      exportClick(){
+        if(!this.checkedWords.length)return;
+        this.$broadcast('getCategoryFromParent',this.checkedWords);
+        this.fetchPackageData();
+        this.showExportBox = !this.showExportBox;
+      },
+      exportToSys(data){
+        console.log("--------topic",this.topic);
+        var postBody = Object.assign({},data,{
+          action:"push",
+          topic:this.topic
+        });
+        this.$http.post(server_path+"/transfer",postBody)
+             .then(response=>{
+                  alert('推送到系统成功');
+                  console.log("推送到系统成功");
+              },(err)=>{
+                  alert('推送到系统失败');
+                  console.log("推送到系统失败");
+              });
 
+      },
+      fetchPackageData(){
+          this.$http.get(server_path+"/theme",
+              {
+              params:{
+                topic : this.topic,
+                value : "package"
+              },
+              before(request){
+                if(sentWordRequest["get"]){
+                  sentWordRequest["get"].abort();
+                }
+                sentWordRequest["get"] =request;
+              }
+          })
+          .then((response)=>{
+            console.log("packages",response.json().packages);
+              this.packageList = response.json().packages;
+          },(err)=>{
+              console.log("请求服务器失败");
+          });
+      },
     //全选
     chooseAll(){
       if(this.checkedWords.length==checkboxWords.length)

@@ -192,7 +192,6 @@ export default {
   events:{
     "export-to-file":function(data,type){
         // 导出txt前端实现，不需要后端交互
-
         
     //   var content = '';
     //   if(type==='jss'){

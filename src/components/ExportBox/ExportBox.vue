@@ -160,6 +160,7 @@ export default {
   methods:{
     closeModal(){
       this.show = false;
+      this.$dispatch("clearTitleCache");
     },
     changeOption(){
 
